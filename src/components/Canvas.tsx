@@ -1,13 +1,35 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ColorPicker from "./ColorPicker.jsx"
+import flags from "../assets/CountryFlagsImages";
+import { compareImages } from "../utils/ComparePixels.ts";
 
 function Canvas(): React.JSX.Element {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const refCanvasRef = useRef<HTMLCanvasElement>(null);
+
     const [drawing, setDrawing] = useState(false);
     const [color, setColor] = useState("#000000");
     const [brushSize, setBrushSize] = useState(1);
     const [isErasing, setIsErasing] = useState(false);
     const [history, setHistory] = useState<ImageData[]>([]);
+
+    const [score, setScore] = useState<number | null>(null);
+    const currentFlag = flags.ad;
+
+    useEffect(() => {
+        const canvas = refCanvasRef.current;
+        if (!canvas) return;
+    
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+    
+        const img = new Image();
+        img.src = currentFlag;
+    
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, 400, 250);
+        };
+    }, [currentFlag]);
 
     const startDrawing = (e: React.MouseEvent) => {
         const canvas = canvasRef.current;
@@ -60,6 +82,22 @@ function Canvas(): React.JSX.Element {
         console.log(history.length);
     };
 
+    const handleSubmit = () => {
+        const userCanvas = canvasRef.current;
+        const refCanvas = refCanvasRef.current;
+        if (!userCanvas || !refCanvas) return;
+    
+        const userCtx = userCanvas.getContext("2d");
+        const refCtx = refCanvas.getContext("2d");
+        if (!userCtx || !refCtx) return;
+    
+        const userData = userCtx.getImageData(0, 0, 400, 250);
+        const refData = refCtx.getImageData(0, 0, 400, 250);
+    
+        const result = compareImages(userData, refData);
+        setScore(result);
+    };
+
     return (
       <div>
         <canvas 
@@ -72,7 +110,15 @@ function Canvas(): React.JSX.Element {
         onMouseUp={stopDrawing}
         onMouseLeave={stopDrawing}
         />
+        <canvas
+        ref={refCanvasRef}
+        width={400}
+        height={250}
+        style={{ display: "none" }}
+        />
         <ColorPicker color={color} changeColor={setColor} brushSize={brushSize} changeBrushSize={setBrushSize} undo={undo} erasing={isErasing} changeErasing={setIsErasing}></ColorPicker>
+        <button onClick={handleSubmit}>Submit Drawing</button>
+        {score !== null && <h2>Score: {score}%</h2>}
       </div>
     )
 }

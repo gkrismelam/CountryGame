@@ -23,7 +23,7 @@ function ColorPicker({color, changeColor, brushSize, changeBrushSize, undo, eras
             <label>Select a color:</label>
             <input type="color" value={color} onChange={(e) => changeColor(e.target.value)}/>
             <label>Select a brush size:</label>
-            <input type="range" min="1" max="20" step="1" value={brushSize} onChange={(e) => changeBrushSize(Number(e.target.value))}/>
+            <input type="range" min="1" max="25" step="1" value={brushSize} onChange={(e) => changeBrushSize(Number(e.target.value))}/>
         </div>
     )
 } 
