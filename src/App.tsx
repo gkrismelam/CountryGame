@@ -1,9 +1,14 @@
 import React from "react";
 import './App.css'
+import Canvas from "./components/Canvas";
+import flags from "./assets/CountryFlagsImages/index.ts"
 
 function App(): React.JSX.Element {
   return (
-    <div></div>
+    <div>
+      <img src={flags.us} alt=".__ flag" style={{ width: 400, height: 250 }} />
+      <Canvas></Canvas>
+    </div>
   )
 }
 
