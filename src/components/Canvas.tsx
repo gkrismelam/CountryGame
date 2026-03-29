@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import ColorPicker from "./ColorPicker.jsx"
-import flags from "../assets/CountryFlagsImages";
+import FlagModule from "../assets/CountryFlagsImages";
 import { compareImages } from "../utils/ComparePixels";
 import "./Canvas.css";
 
@@ -21,7 +21,7 @@ function Canvas(): React.JSX.Element {
     const CANVAS_HEIGHT = 250;
 
     const pickRandomFlag = () => {
-        const keys = Object.keys(flags);
+        const keys = Object.keys(FlagModule.flags);
         const randomKey = keys[Math.floor(Math.random() * keys.length)];
         setCurrentFlagKey(randomKey);
     };
@@ -38,7 +38,7 @@ function Canvas(): React.JSX.Element {
         if (!refCtx || !userCtx) return;
       
         const img = new Image();
-        img.src = flags[currentFlagKey];
+        img.src = FlagModule.flags[currentFlagKey];
     
         img.onload = () => {
             refCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -139,8 +139,8 @@ function Canvas(): React.JSX.Element {
 
     return (
       <div className="canvas-container">
-        <p className="country-indicator">Current Flag: {currentFlagKey}</p>
-        <img src={flags[currentFlagKey]} alt={currentFlagKey} className="flag-preview"/>
+        <p className="country-indicator">Current Flag: {FlagModule.fullNames[currentFlagKey]}</p>
+        <img src={FlagModule.flags[currentFlagKey]} alt={currentFlagKey} className="flag-preview"/>
 
         <canvas 
         ref={canvasRef}
