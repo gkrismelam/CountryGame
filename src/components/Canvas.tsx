@@ -4,8 +4,10 @@ import ColorPicker from "./ColorPicker.jsx"
 function Canvas(): React.JSX.Element {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [drawing, setDrawing] = useState(false);
-    const [color, setColor] = useState("#0000000");
+    const [color, setColor] = useState("#000000");
     const [brushSize, setBrushSize] = useState(1);
+    const [isErasing, setIsErasing] = useState(false);
+    const [history, setHistory] = useState<ImageData[]>([]);
 
     const startDrawing = (e: React.MouseEvent) => {
         const canvas = canvasRef.current;
@@ -13,6 +15,9 @@ function Canvas(): React.JSX.Element {
 
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
+
+        const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        setHistory((prev) => [...prev, snapshot]);
 
         setDrawing(true);
         ctx.beginPath();
@@ -27,6 +32,7 @@ function Canvas(): React.JSX.Element {
         if (!ctx) return;
 
         ctx.lineTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+        ctx.globalCompositeOperation = isErasing ? "destination-out" : "source-over";
         ctx.strokeStyle = color;
         ctx.lineWidth = brushSize;
         ctx.lineCap = "round";
@@ -35,6 +41,24 @@ function Canvas(): React.JSX.Element {
     }
 
     const stopDrawing = () => setDrawing(false);
+
+    const undo = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+      
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+      
+        setHistory((prev) => {
+          if (prev.length === 0) return prev;
+      
+          const lastState = prev[prev.length - 1];
+          ctx.putImageData(lastState, 0, 0);
+      
+          return prev.slice(0, -1);
+        });
+        console.log(history.length);
+    };
 
     return (
       <div>
@@ -48,10 +72,9 @@ function Canvas(): React.JSX.Element {
         onMouseUp={stopDrawing}
         onMouseLeave={stopDrawing}
         />
-        <ColorPicker color={color} changeColor={setColor} brushSize={brushSize} changeBrushSize={setBrushSize}></ColorPicker>
+        <ColorPicker color={color} changeColor={setColor} brushSize={brushSize} changeBrushSize={setBrushSize} undo={undo} erasing={isErasing} changeErasing={setIsErasing}></ColorPicker>
       </div>
     )
 }
   
-  export default Canvas
-  
+export default Canvas
