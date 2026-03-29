@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import ColorPicker from "./ColorPicker.jsx"
 import flags from "../assets/CountryFlagsImages";
-import { compareImages } from "../utils/ComparePixels.ts";
+import { compareImages } from "../utils/ComparePixels";
 
 function Canvas(): React.JSX.Element {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -11,25 +11,43 @@ function Canvas(): React.JSX.Element {
     const [color, setColor] = useState("#000000");
     const [brushSize, setBrushSize] = useState(1);
     const [isErasing, setIsErasing] = useState(false);
-    const [history, setHistory] = useState<ImageData[]>([]);
+    const [_history, setHistory] = useState<ImageData[]>([]);
 
     const [score, setScore] = useState<number | null>(null);
-    const currentFlag = flags.ad;
+    const [currentFlagKey, setCurrentFlagKey] = useState<string>("");
+
+    const pickRandomFlag = () => {
+        const keys = Object.keys(flags);
+        const randomKey = keys[Math.floor(Math.random() * keys.length)];
+        setCurrentFlagKey(randomKey);
+    };
 
     useEffect(() => {
-        const canvas = refCanvasRef.current;
-        if (!canvas) return;
-    
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-    
+        if (!currentFlagKey) return;
+
+        const refCanvas = refCanvasRef.current;
+        const userCanvas = canvasRef.current;
+        if (!refCanvas || !userCanvas) return;
+      
+        const refCtx = refCanvas.getContext("2d");
+        const userCtx = userCanvas.getContext("2d");
+        if (!refCtx || !userCtx) return;
+      
         const img = new Image();
-        img.src = currentFlag;
+        img.src = flags[currentFlagKey];
     
         img.onload = () => {
-          ctx.drawImage(img, 0, 0, 400, 250);
+            refCtx.clearRect(0, 0, 400, 250);
+            userCtx.clearRect(0, 0, 400, 250);
+            setHistory([]);
+            setScore(null);
+            refCtx.drawImage(img, 0, 0, 400, 250);
         };
-    }, [currentFlag]);
+    }, [currentFlagKey]);
+
+    useEffect(() => {
+        requestAnimationFrame(() => pickRandomFlag());
+    }, []);
 
     const startDrawing = (e: React.MouseEvent) => {
         const canvas = canvasRef.current;
@@ -42,8 +60,13 @@ function Canvas(): React.JSX.Element {
         setHistory((prev) => [...prev, snapshot]);
 
         setDrawing(true);
+
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
         ctx.beginPath();
-        ctx.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+        ctx.moveTo(x, y);
     };
 
     const draw = (e: React.MouseEvent) => {
@@ -53,12 +76,17 @@ function Canvas(): React.JSX.Element {
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        ctx.lineTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
         ctx.globalCompositeOperation = isErasing ? "destination-out" : "source-over";
         ctx.strokeStyle = color;
         ctx.lineWidth = brushSize;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
+
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        ctx.lineTo(x, y);
         ctx.stroke();
     }
 
@@ -79,7 +107,7 @@ function Canvas(): React.JSX.Element {
       
           return prev.slice(0, -1);
         });
-        console.log(history.length);
+        console.log(_history);
     };
 
     const handleSubmit = () => {
@@ -100,11 +128,12 @@ function Canvas(): React.JSX.Element {
 
     return (
       <div>
+        <img src={flags[currentFlagKey]} alt=".__ flag" style={{ width: 400, height: 250 }} />
         <canvas 
         ref={canvasRef}
         width={400} 
         height={250} 
-        style={{ border: '1px solid black' }}
+        style={{ border: '3px solid black', cursor: 'crosshair' }}
         onMouseDown={startDrawing}
         onMouseMove={draw}
         onMouseUp={stopDrawing}
@@ -119,6 +148,8 @@ function Canvas(): React.JSX.Element {
         <ColorPicker color={color} changeColor={setColor} brushSize={brushSize} changeBrushSize={setBrushSize} undo={undo} erasing={isErasing} changeErasing={setIsErasing}></ColorPicker>
         <button onClick={handleSubmit}>Submit Drawing</button>
         {score !== null && <h2>Score: {score}%</h2>}
+        <p>Current Flag: {currentFlagKey}</p>
+        <button onClick={pickRandomFlag}>Next Flag</button>
       </div>
     )
 }
