@@ -4,8 +4,10 @@ import Canvas from "./components/Canvas";
 
 function App(): React.JSX.Element {
   return (
-    <div>
-      <Canvas></Canvas>
+    <div className="app-container">
+      <div className="canvas-card">
+        <Canvas />
+      </div>
     </div>
   )
 }

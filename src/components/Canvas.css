@@ -1,0 +1,78 @@
+/* Canvas container */
+.canvas-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    font-family: Arial, sans-serif;
+}
+
+/* Canvas wrapper for positioning reference canvas if needed */
+.canvas-wrapper {
+    position: relative;
+}
+
+/* Main user canvas */
+.user-canvas {
+    background-color: #f5f5f5;
+    border: 3px solid #4A90E2;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+/* Hidden reference canvas */
+.ref-canvas {
+    display: none;
+}
+
+/* Buttons */
+.canvas-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.canvas-buttons button {
+    background-color: #4A90E2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.canvas-buttons button:hover {
+    background-color: #357ABD;
+}
+
+/* Score feedback */
+.score {
+    font-weight: bold;
+}
+
+.score.high {
+    color: green;
+}
+
+.score.medium {
+    color: orange;
+}
+
+.score.low {
+    color: red;
+}
+
+/* Flag preview (optional) */
+.flag-preview {
+    width: 100px;
+    height: 60px;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.country-indicator {
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+}

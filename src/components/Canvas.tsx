@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import ColorPicker from "./ColorPicker.jsx"
 import flags from "../assets/CountryFlagsImages";
 import { compareImages } from "../utils/ComparePixels";
+import "./Canvas.css";
 
 function Canvas(): React.JSX.Element {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -9,12 +10,15 @@ function Canvas(): React.JSX.Element {
 
     const [drawing, setDrawing] = useState(false);
     const [color, setColor] = useState("#000000");
-    const [brushSize, setBrushSize] = useState(1);
+    const [brushSize, setBrushSize] = useState(10);
     const [isErasing, setIsErasing] = useState(false);
     const [_history, setHistory] = useState<ImageData[]>([]);
 
     const [score, setScore] = useState<number | null>(null);
     const [currentFlagKey, setCurrentFlagKey] = useState<string>("");
+
+    const CANVAS_WIDTH = 400;
+    const CANVAS_HEIGHT = 250;
 
     const pickRandomFlag = () => {
         const keys = Object.keys(flags);
@@ -37,16 +41,23 @@ function Canvas(): React.JSX.Element {
         img.src = flags[currentFlagKey];
     
         img.onload = () => {
-            refCtx.clearRect(0, 0, 400, 250);
-            userCtx.clearRect(0, 0, 400, 250);
+            refCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            userCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
             setHistory([]);
             setScore(null);
-            refCtx.drawImage(img, 0, 0, 400, 250);
+            refCtx.drawImage(img, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         };
     }, [currentFlagKey]);
 
     useEffect(() => {
         requestAnimationFrame(() => pickRandomFlag());
+
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
     }, []);
 
     const startDrawing = (e: React.MouseEvent) => {
@@ -119,37 +130,53 @@ function Canvas(): React.JSX.Element {
         const refCtx = refCanvas.getContext("2d");
         if (!userCtx || !refCtx) return;
     
-        const userData = userCtx.getImageData(0, 0, 400, 250);
-        const refData = refCtx.getImageData(0, 0, 400, 250);
+        const userData = userCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        const refData = refCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     
         const result = compareImages(userData, refData);
         setScore(result);
     };
 
     return (
-      <div>
-        <img src={flags[currentFlagKey]} alt=".__ flag" style={{ width: 400, height: 250 }} />
+      <div className="canvas-container">
+        <p className="country-indicator">Current Flag: {currentFlagKey}</p>
+        <img src={flags[currentFlagKey]} alt={currentFlagKey} className="flag-preview"/>
+
         <canvas 
         ref={canvasRef}
-        width={400} 
-        height={250} 
+        width={CANVAS_WIDTH} 
+        height={CANVAS_HEIGHT} 
         style={{ border: '3px solid black', cursor: 'crosshair' }}
+        className="user-canvas"
         onMouseDown={startDrawing}
         onMouseMove={draw}
         onMouseUp={stopDrawing}
         onMouseLeave={stopDrawing}
         />
+
         <canvas
         ref={refCanvasRef}
-        width={400}
-        height={250}
+        width={CANVAS_WIDTH}
+        height={CANVAS_HEIGHT}
         style={{ display: "none" }}
         />
+
         <ColorPicker color={color} changeColor={setColor} brushSize={brushSize} changeBrushSize={setBrushSize} undo={undo} erasing={isErasing} changeErasing={setIsErasing}></ColorPicker>
-        <button onClick={handleSubmit}>Submit Drawing</button>
-        {score !== null && <h2>Score: {score}%</h2>}
-        <p>Current Flag: {currentFlagKey}</p>
-        <button onClick={pickRandomFlag}>Next Flag</button>
+        
+        <div className="canvas-buttons">
+            <button onClick={handleSubmit}>Submit Drawing</button>
+            <button onClick={pickRandomFlag}>Next Flag</button>
+        </div>
+
+        {score !== null && (
+            <h2
+            className={`score ${
+                score > 80 ? "high" : score > 50 ? "medium" : "low"
+            }`}
+            >
+            Score: {score}%
+            </h2>
+        )}
       </div>
     )
 }
